@@ -1,3 +1,4 @@
+using Lab1Appz.Animal.Strategy;
 using Lab1Appz.Events;
 
 namespace Lab1Appz.Animal;
@@ -15,6 +16,7 @@ public abstract class Animal
     private bool IsCleaned {get; set;}
 
     private Timer _hungerCheckTimer;
+    public IMovementStrategy? MovementStrategy { get; set; }
     protected Animal(string? name, int legs = 0,int wings = 0,bool isWild = false)
     {
         Name = name;
@@ -32,10 +34,15 @@ public abstract class Animal
     {
         if (sender == null) throw new ArgumentNullException(nameof(sender));
         double secondsSinceLastMeal = (DateTime.Now - LastMealTime).TotalSeconds;
-        if (secondsSinceLastMeal > 5)
+        if (secondsSinceLastMeal > 5 && IsAlive)
         {
             HungerCheckEvent?.Invoke(this,new HungerEventCheck(Name ?? "Безіменна тварина",secondsSinceLastMeal));
         }
+    }
+    public void StopHungerCheck()
+    {
+        _hungerCheckTimer.Stop();
+        _hungerCheckTimer.Dispose();
     }
 
     public void Eat()
@@ -63,45 +70,13 @@ public abstract class Animal
         if ((DateTime.Now - LastMealTime).TotalSeconds > 24)
         {
             IsAlive = false;
+            StopHungerCheck();
         }
     }
 
     public void Move()
     {
-        if (!IsAlive)
-        {
-            Console.WriteLine($"{Name} померла і не може рухатись.");
-            return;
-        }
-
-        if ((DateTime.Now - LastMealTime).TotalSeconds > 8)
-        {
-            Console.WriteLine($"{Name} дуже голодна та не може рухатись,але може повзати та ходити.");
-        }
-        else
-        {
-            Console.WriteLine($"{Name} рухається.");
-        }
-        CheckHunger();
-    }
-
-    public void Fly()
-    {
-        if (!IsAlive)
-        {
-            Console.WriteLine($"{Name} померла і не може літати.");
-            return;
-        }
-
-        if ((DateTime.Now - LastMealTime).TotalSeconds > 8)
-        {
-            Console.WriteLine($"{Name} дуже голодна і не може літати.");
-        }
-        else if (Wings > 0)
-        {
-            Console.WriteLine($"{Name} літає.");
-        }
-        CheckHunger();
+        MovementStrategy?.Move(this);
     }
 
     public void Clean()

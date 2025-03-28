@@ -1,4 +1,4 @@
-namespace Lab1Appz.Animal;
+namespace Lab1Appz.Animal.Factory;
 
 public interface IAnimalFactory
 {

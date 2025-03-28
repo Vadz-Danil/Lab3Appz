@@ -1,4 +1,4 @@
-using Lab1Appz.Animal;
+using Lab1Appz.Animal.Factory;
 using Lab1Appz.Habitat;
 
 namespace Lab1Appz;
@@ -317,23 +317,8 @@ public class ConsoleMenu
             Console.ReadKey();
             return;
         }
-
-        if (!animal.IsAlive)
-        {
-            Console.WriteLine($"{animal.Name} померла і не може виконувати жодних дій.");
-            Console.ReadKey();
-            return;
-        }
-
-        if (animal is Dog || animal is Lizard)
-        {
-            animal.Move();
-        }
-        else if (animal is Owl)
-        {
-            animal.Fly();
-        }
-
+        
+        animal.Move();
         Console.ReadKey();
     }
 
