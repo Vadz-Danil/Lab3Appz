@@ -1,3 +1,5 @@
+using Lab1Appz.Events;
+
 namespace Lab1Appz.Animal;
 using System.Timers;
 
@@ -12,8 +14,6 @@ public abstract class Animal
     public bool IsWild {get; set;}
     private bool IsCleaned {get; set;}
 
-    public event Action? HungerCheckEvent;
-
     private Timer _hungerCheckTimer;
     protected Animal(string? name, int legs = 0,int wings = 0,bool isWild = false)
     {
@@ -22,17 +22,19 @@ public abstract class Animal
         Wings = wings;
         LastMealTime = DateTime.Now;
         IsWild = isWild;
-        _hungerCheckTimer = new Timer(10000);
+        _hungerCheckTimer = new Timer(5000);
         _hungerCheckTimer.Elapsed += OnHungerCheck;
         _hungerCheckTimer.AutoReset = true;
         _hungerCheckTimer.Start();
     }
+    public event EventHandler<HungerEventCheck>? HungerCheckEvent;
     private void OnHungerCheck(object? sender, ElapsedEventArgs e)
     {
         if (sender == null) throw new ArgumentNullException(nameof(sender));
-        if ((DateTime.Now - LastMealTime).TotalSeconds > 5)
+        double secondsSinceLastMeal = (DateTime.Now - LastMealTime).TotalSeconds;
+        if (secondsSinceLastMeal > 5)
         {
-            HungerCheckEvent?.Invoke();
+            HungerCheckEvent?.Invoke(this,new HungerEventCheck(Name ?? "Безіменна тварина",secondsSinceLastMeal));
         }
     }
 

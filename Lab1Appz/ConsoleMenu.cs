@@ -91,11 +91,11 @@ public class ConsoleMenu
                 return;
         }
 
-        animal.HungerCheckEvent += () =>
+        animal.HungerCheckEvent += (_,args) =>
         {
-            if ((DateTime.Now - animal.LastMealTime).TotalSeconds > 5)
+            if (args.SecondsSinceLastMeal > 5)
             {
-                Console.WriteLine($"{animal.Name} голодна! Потрібно її погодувати.");
+                Console.WriteLine($"{args.AnimalName} голодна! Пройшло {args.SecondsSinceLastMeal} секунд з останнього годування.");
             }
         };
 
