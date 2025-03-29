@@ -7,11 +7,11 @@ using System.Timers;
 public abstract class Animal
 {
     public string? Name { get; }
-    public int Legs { get; protected set; }
+    public int Legs { get; set; }
     public int Wings { get; }
     public int MealsPerDay{get; private set;}
     public DateTime LastMealTime { get; private set; }
-    public bool IsAlive { get; set; } = true;
+    public bool IsAlive { get; private set; } = true;
     public bool IsWild {get; set;}
     private bool IsCleaned {get; set;}
 
@@ -39,7 +39,7 @@ public abstract class Animal
             HungerCheckEvent?.Invoke(this,new HungerEventCheck(Name ?? "Безіменна тварина",secondsSinceLastMeal));
         }
     }
-    public void StopHungerCheck()
+    private void StopHungerCheck()
     {
         _hungerCheckTimer.Stop();
         _hungerCheckTimer.Dispose();
