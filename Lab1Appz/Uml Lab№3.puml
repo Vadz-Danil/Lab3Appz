@@ -1,0 +1,171 @@
+@startuml
+
+' Налаштування стилю
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+
+' Простір імен Lab1Appz.Animal
+package "Lab1Appz.Animal" {
+  abstract class Animal {
+    - Name: string?
+    - Legs: int
+    - Wings: int
+    - MealsPerDay: int
+    - LastMealTime: DateTime
+    - IsAlive: bool
+    - IsWild: bool
+    - IsCleaned: bool
+    - _hungerCheckTimer: Timer
+    + MovementStrategy: IMovementStrategy?
+    + HungerCheckEvent: EventHandler<HungerEventCheck>?
+    + Eat()
+    + CheckHunger()
+    + Move()
+    + Clean()
+    + GetHappinessStatus(): string
+    - StopHungerCheck()
+    - OnHungerCheck(sender: object?, e: ElapsedEventArgs)
+  }
+
+  class Dog {
+    + Dog(name: string?, isWild: bool)
+  }
+
+  class Lizard {
+    + Lizard(name: string?, isWild: bool)
+  }
+
+  class Owl {
+    + Owl(name: string?, isWild: bool)
+  }
+
+  ' Успадкування
+  Animal <|-- Dog
+  Animal <|-- Lizard
+  Animal <|-- Owl
+
+  ' Події (Observer)
+  class HungerEventCheck {
+    + AnimalName: string
+    + SecondsSinceLastMeal: double
+    + HungerEventCheck(animalName: string, secondsSinceLastMeal: double)
+  }
+  Animal o--> "1" HungerEventCheck : raises
+  note right of Animal
+    Observer Pattern: 
+    HungerCheckEvent notifies about hunger state
+  end note
+}
+
+' Простір імен Lab1Appz.Animal.Strategy
+package "Lab1Appz.Animal.Strategy" {
+  interface IMovementStrategy {
+    + Move(animal: Animal)
+  }
+
+  class WalkingStrategy {
+    + Move(animal: Animal)
+  }
+
+  class FlyingStrategy {
+    + Move(animal: Animal)
+  }
+
+  ' Реалізація інтерфейсу (Strategy)
+  IMovementStrategy <|.. WalkingStrategy
+  IMovementStrategy <|.. FlyingStrategy
+  Animal o--> "1" IMovementStrategy : uses
+  note right of IMovementStrategy
+    Strategy Pattern: 
+    Defines movement behavior (Walking/Flying)
+  end note
+}
+
+' Простір імен Lab1Appz.Animal.Factory
+package "Lab1Appz.Animal.Factory" {
+  interface IAnimalFactory {
+    + CreateAnimal(name: string, isWild: bool): Animal
+  }
+
+  class DogFactory {
+    + CreateAnimal(name: string, isWild: bool): Animal
+  }
+
+  class LizardFactory {
+    + CreateAnimal(name: string, isWild: bool): Animal
+  }
+
+  class OwlFactory {
+    + CreateAnimal(name: string, isWild: bool): Animal
+  }
+
+  ' Реалізація інтерфейсу (Factory)
+  IAnimalFactory <|.. DogFactory
+  IAnimalFactory <|.. LizardFactory
+  IAnimalFactory <|.. OwlFactory
+
+  ' Асоціація
+  DogFactory o--> "1" Dog : creates
+  LizardFactory o--> "1" Lizard : creates
+  OwlFactory o--> "1" Owl : creates
+  note right of IAnimalFactory
+    Factory Pattern: 
+    Creates specific Animal instances
+  end note
+}
+
+' Простір імен Lab1Appz.Habitat
+package "Lab1Appz.Habitat" {
+  abstract class Habitat {
+    - Animals: List<Animal>
+    + AddAnimal(animal: Animal?)
+  }
+
+  class Owner {
+    + CleanAnimals()
+  }
+
+  class PetStore {
+    + CleanAnimals()
+  }
+
+  class Wild {
+  }
+
+  ' Успадкування
+  Habitat <|-- Owner
+  Habitat <|-- PetStore
+  Habitat <|-- Wild
+
+  ' Асоціація
+  Habitat o--> "0..*" Animal : contains
+}
+
+' Простір імен Lab1Appz
+package "Lab1Appz" {
+  class ConsoleMenu {
+    - _habitats: List<Habitat?>
+    - _allAnimals: List<Animal?>
+    + ConsoleMenu(habitats: List<Habitat?>, allAnimals: List<Animal?>)
+    + ShowMenu()
+    - AddAnimal()
+    - ShowAllAnimals()
+    - FeedAnimal()
+    - CleanAnimalsInHabitat()
+    - CheckIfAnimalIsHappy()
+    - AnimalActions()
+    - RemoveAnimal()
+  }
+
+  class Program {
+    + Main()
+  }
+
+  ' Залежності
+  ConsoleMenu o--> "0..*" Habitat : manages
+  ConsoleMenu o--> "0..*" Animal : manages
+  ConsoleMenu o--> "1" IAnimalFactory : uses
+  Program o--> "1" ConsoleMenu : creates
+}
+
+@enduml

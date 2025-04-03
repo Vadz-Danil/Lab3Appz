@@ -1,4 +1,4 @@
-using Lab1Appz.Animal;
+using Lab1Appz.Animal.Factory;
 using Lab1Appz.Habitat;
 
 namespace Lab1Appz;
@@ -74,64 +74,66 @@ public class ConsoleMenu
         Console.WriteLine("3. Ящірка");
         string? animalChoice = Console.ReadLine();
 
-        Animal.Animal? animal;
-        switch (animalChoice)
+        IAnimalFactory? factory = animalChoice switch
         {
-            case "1":
-                animal = new Dog(name);
-                break;
-            case "2":
-                animal = new Owl(name);
-                break;
-            case "3":
-                animal = new Lizard(name);
-                break;
-            default:
-                Console.WriteLine("Невірний вибір!");
-                return;
-        }
-
-        animal.HungerCheckEvent += () =>
-        {
-            if ((DateTime.Now - animal.LastMealTime).TotalSeconds > 5)
-            {
-                Console.WriteLine($"{animal.Name} голодна! Потрібно її погодувати.");
-            }
+            "1" => new DogFactory(),
+            "2" => new OwlFactory(),
+            "3" => new LizzardFactory(),
+            _ => null
         };
-
-        _allAnimals.Add(animal);
-        Console.WriteLine("Оберіть середовище для тварини:");
-        Console.WriteLine("1. Зоомагазин");
-        Console.WriteLine("2. Дім власника");
-        Console.WriteLine("3. Дика природа");
-        string? habitatChoice = Console.ReadLine();
-
-        Habitat.Habitat? selectedHabitat;
-        switch (habitatChoice)
+        if (factory == null)
         {
-            case "1":
-                selectedHabitat = _habitats.Find(h => h is PetStore) ?? new PetStore();
-                break;
-            case "2":
-                selectedHabitat = _habitats.Find(h => h is Owner) ?? new Owner();
-                break;
-            case "3":
-                selectedHabitat = _habitats.Find(h => h is Wild) ?? new Wild();
-                animal.IsWild = true;
-                break;
-            default:
-                Console.WriteLine("Невірний вибір!");
-                return;
+            Console.WriteLine("Невірний вибір!");
+            return;
         }
 
-        if (!_habitats.Contains(selectedHabitat))
+        if (name != null)
         {
-            _habitats.Add(selectedHabitat);
+            Animal.Animal animal = factory.CreateAnimal(name, false);
+
+            animal.HungerCheckEvent += (_,args) =>
+            {
+                if (args.SecondsSinceLastMeal > 5)
+                {
+                    Console.WriteLine($"{args.AnimalName} голодна! Пройшло {args.SecondsSinceLastMeal} секунд з останнього годування.");
+                }
+            };
+
+            _allAnimals.Add(animal);
+            Console.WriteLine("Оберіть середовище для тварини:");
+            Console.WriteLine("1. Зоомагазин");
+            Console.WriteLine("2. Дім власника");
+            Console.WriteLine("3. Дика природа");
+            string? habitatChoice = Console.ReadLine();
+
+            Habitat.Habitat? selectedHabitat;
+            switch (habitatChoice)
+            {
+                case "1":
+                    selectedHabitat = _habitats.Find(h => h is PetStore) ?? new PetStore();
+                    break;
+                case "2":
+                    selectedHabitat = _habitats.Find(h => h is Owner) ?? new Owner();
+                    break;
+                case "3":
+                    selectedHabitat = _habitats.Find(h => h is Wild) ?? new Wild();
+                    animal.IsWild = true;
+                    break;
+                default:
+                    Console.WriteLine("Невірний вибір!");
+                    return;
+            }
+
+            if (!_habitats.Contains(selectedHabitat))
+            {
+                _habitats.Add(selectedHabitat);
+            }
+
+            selectedHabitat.AddAnimal(animal);
+
+            Console.WriteLine($"{animal.Name} додано до {selectedHabitat.GetType().Name}.");
         }
 
-        selectedHabitat.AddAnimal(animal);
-
-        Console.WriteLine($"{animal.Name} додано до {selectedHabitat.GetType().Name}.");
         Console.WriteLine("Натисніть будь-яку клавішу, щоб повернутися в меню...");
         Console.ReadKey();
     }
@@ -315,23 +317,8 @@ public class ConsoleMenu
             Console.ReadKey();
             return;
         }
-
-        if (!animal.IsAlive)
-        {
-            Console.WriteLine($"{animal.Name} померла і не може виконувати жодних дій.");
-            Console.ReadKey();
-            return;
-        }
-
-        if (animal is Dog || animal is Lizard)
-        {
-            animal.Move();
-        }
-        else if (animal is Owl)
-        {
-            animal.Fly();
-        }
-
+        
+        animal.Move();
         Console.ReadKey();
     }
 

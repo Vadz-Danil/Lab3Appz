@@ -1,16 +1,15 @@
-﻿namespace Lab1Appz
+﻿namespace Lab1Appz;
+
+class Program
 {
-    class Program
+    static void Main()
     {
-        static void Main()
+        List<Habitat.Habitat?> habitats = new List<Habitat.Habitat?>();
+        List<Animal.Animal?> allAnimals = new List<Animal.Animal?>();
+        ConsoleMenu consoleMenu = new ConsoleMenu(habitats, allAnimals);
+        while (true)
         {
-            List<Habitat.Habitat?> habitats = new List<Habitat.Habitat?>();
-            List<Animal.Animal?> allAnimals = new List<Animal.Animal?>();
-            ConsoleMenu consoleMenu = new ConsoleMenu(habitats, allAnimals);
-            while (true)
-            {
-                consoleMenu.ShowMenu();
-            }
+            consoleMenu.ShowMenu();
         }
     }
 }
