@@ -1,20 +1,22 @@
+using Lab1Appz.Animal.Strategy;
+using Lab1Appz.Events;
+
 namespace Lab1Appz.Animal;
 using System.Timers;
 
 public abstract class Animal
 {
     public string? Name { get; }
-    public int Legs { get; protected set; }
+    public int Legs { get; set; }
     public int Wings { get; }
     public int MealsPerDay{get; private set;}
     public DateTime LastMealTime { get; private set; }
-    public bool IsAlive { get; set; } = true;
+    public bool IsAlive { get; private set; } = true;
     public bool IsWild {get; set;}
     private bool IsCleaned {get; set;}
 
-    public event Action? HungerCheckEvent;
-
     private Timer _hungerCheckTimer;
+    public IMovementStrategy? MovementStrategy { get; set; }
     protected Animal(string? name, int legs = 0,int wings = 0,bool isWild = false)
     {
         Name = name;
@@ -22,18 +24,25 @@ public abstract class Animal
         Wings = wings;
         LastMealTime = DateTime.Now;
         IsWild = isWild;
-        _hungerCheckTimer = new Timer(10000);
+        _hungerCheckTimer = new Timer(5000);
         _hungerCheckTimer.Elapsed += OnHungerCheck;
         _hungerCheckTimer.AutoReset = true;
         _hungerCheckTimer.Start();
     }
+    public event EventHandler<HungerEventCheck>? HungerCheckEvent;
     private void OnHungerCheck(object? sender, ElapsedEventArgs e)
     {
         if (sender == null) throw new ArgumentNullException(nameof(sender));
-        if ((DateTime.Now - LastMealTime).TotalSeconds > 5)
+        double secondsSinceLastMeal = (DateTime.Now - LastMealTime).TotalSeconds;
+        if (secondsSinceLastMeal > 5 && IsAlive)
         {
-            HungerCheckEvent?.Invoke();
+            HungerCheckEvent?.Invoke(this,new HungerEventCheck(Name ?? "Безіменна тварина",secondsSinceLastMeal));
         }
+    }
+    private void StopHungerCheck()
+    {
+        _hungerCheckTimer.Stop();
+        _hungerCheckTimer.Dispose();
     }
 
     public void Eat()
@@ -61,45 +70,13 @@ public abstract class Animal
         if ((DateTime.Now - LastMealTime).TotalSeconds > 24)
         {
             IsAlive = false;
+            StopHungerCheck();
         }
     }
 
     public void Move()
     {
-        if (!IsAlive)
-        {
-            Console.WriteLine($"{Name} померла і не може рухатись.");
-            return;
-        }
-
-        if ((DateTime.Now - LastMealTime).TotalSeconds > 8)
-        {
-            Console.WriteLine($"{Name} дуже голодна та не може рухатись,але може повзати та ходити.");
-        }
-        else
-        {
-            Console.WriteLine($"{Name} рухається.");
-        }
-        CheckHunger();
-    }
-
-    public void Fly()
-    {
-        if (!IsAlive)
-        {
-            Console.WriteLine($"{Name} померла і не може літати.");
-            return;
-        }
-
-        if ((DateTime.Now - LastMealTime).TotalSeconds > 8)
-        {
-            Console.WriteLine($"{Name} дуже голодна і не може літати.");
-        }
-        else if (Wings > 0)
-        {
-            Console.WriteLine($"{Name} літає.");
-        }
-        CheckHunger();
+        MovementStrategy?.Move(this);
     }
 
     public void Clean()
